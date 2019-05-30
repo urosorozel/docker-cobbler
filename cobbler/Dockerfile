@@ -1,6 +1,3 @@
-
-
-
 FROM ubuntu:bionic
 
 ENV COBBLER_GIT_URL="https://github.com/cobbler/cobbler.git"
@@ -33,7 +30,6 @@ RUN apt-get update && \
       curl https://bootstrap.pypa.io/get-pip.py | python && \
       pip install django==1.9.13 ipaddress j2cli
 
-ADD etc/supervisor/conf.d/supervisord.conf /etc/supervisor/conf.d/
 
 RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
     make && \
@@ -47,16 +43,13 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
     sed -i "s|^.*Order allow,deny.*||g" /etc/apache2/conf-available/cobbler.conf && \
     sed -i "s|^.*Allow from all.*|    Require all granted|g" /etc/apache2/conf-available/cobbler.conf && \
     sed -i "s|^.*server_args.*|        server_args             = -s /tftpboot|g" /etc/cobbler/tftpd.template && \
-    mkdir /tftpboot && \
+    echo "lanplus=1" >> /etc/cobbler/power/fence_ipmilan.template && \
     touch /var/lib/dhcp/dhcpd.leases && \
-    cp /usr/lib/ipxe/undionly.kpxe /tftpboot/undionly.kpxe && \
+    cp /usr/lib/ipxe/undionly.kpxe /srv/tftp/undionly.kpxe && \
     a2enmod proxy proxy_http rewrite && \
     a2enconf cobbler cobbler_web
     
-
-ADD etc/cobbler/settings /etc/cobbler/settings
-ADD etc/cobbler/dhcp.template /etc/cobbler/dhcp.template
-ADD files/restart-dhcp.sh /var/lib/cobbler/triggers/sync/post/restart-dhcp.sh
+COPY tree/ /
 
 RUN service apache2 start && \
     service cobblerd start && \

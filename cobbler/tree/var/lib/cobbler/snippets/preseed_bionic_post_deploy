@@ -1,0 +1,11 @@
+# Install public ssh key for root user
+cd /root
+mkdir --mode=700 .ssh
+cat >> .ssh/authorized_keys << "PUBLIC_KEY"
+{{cobbler_public_key}}
+PUBLIC_KEY
+chmod 600 .ssh/authorized_keys
+sed -i 's|^#PermitRootLogin.*|PermitRootLogin yes|g' /etc/ssh/sshd_config
+sed -i 's|^PasswordAuthentication no|PasswordAuthentication yes|g' /etc/ssh/sshd_config
+wget http://$http_server/cobbler/pub/bionic-sources.list -O /etc/apt/sources.list
+wget http://$http_server/cblr/svc/op/nopxe/system/$system_name -O /dev/null
