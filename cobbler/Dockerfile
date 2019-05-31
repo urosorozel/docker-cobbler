@@ -25,6 +25,7 @@ RUN apt-get update && \
              net-tools \
              curl \
              supervisor \
+             vim \
              rsyslog \
              rsync && \
       curl https://bootstrap.pypa.io/get-pip.py | python && \

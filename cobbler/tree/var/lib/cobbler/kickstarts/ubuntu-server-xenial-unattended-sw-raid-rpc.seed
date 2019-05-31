@@ -1,0 +1,282 @@
+#
+# Ubuntu Server 16.04 Preseed
+#
+# Usage:
+#
+# This Ubuntu Preseed file is meant to be used with Cobbler. It has been
+# tested only on Cobbler 2.4.1. It is a completely unattended install.
+#
+# References:
+#
+# https://help.ubuntu.com/16.04/installation-guide/example-preseed.txt
+# http://www.claudiokuenzler.com/blog/513/debian-ubuntu-preseed-create-two-volume-groups-same-disk
+
+#############
+#
+# Kernel Options
+#
+#############
+
+# Use the following option to add additional boot parameters for the
+# installed system (if supported by the bootloader installer).
+# Note: options passed to the installer will be added automatically.
+d-i debian-installer/add-kernel-opts string $kernel_options_post
+
+#############
+#
+# Networking
+#
+#############
+
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_hostname string $hostname
+
+# Network install
+#d-i anna/choose_modules string network-console
+#d-i preseed/early_command string anna-install network-console
+#d-i network-console/password           password cobbler
+#d-i network-console/password-again     password cobbler
+#############
+#
+# Pre Install
+#
+#############
+
+# Command Line 1: This is necessary otherwise you will be prompted to umount /dev/sda. See Ubuntu bug #1347726.
+d-i preseed/early_command string \
+      umount /media || true
+
+#############
+#
+# Net Image
+#
+#############
+
+# Required at least for 12.10+
+d-i live-installer/net-image string http://$http_server/cobbler/links/$distro_name/install/filesystem.squashfs
+
+#############
+#
+# Localization
+#
+#############
+
+d-i debian-installer/locale string en
+d-i debian-installer/country string US
+d-i debian-installer/locale string en_US.UTF-8
+d-i debian-installer/language string en
+
+#############
+#
+# Keyboard
+#
+#############
+
+# Disable automatic (interactive) keymap detection.
+d-i console-setup/ask_detect boolean false
+d-i console-setup/layoutcode string us
+d-i console-setup/variantcode string
+d-i keyboard-configuration/layoutcode string us
+
+#############
+#
+# Mirror
+#
+#############
+
+d-i mirror/country string manual
+d-i mirror/http/proxy string
+d-i mirror/http/hostname string $http_server
+d-i mirror/http/directory string $install_source_directory
+
+#############
+#
+# Clock and Time Zone
+#
+#############
+
+# Controls whether to use NTP to set the clock during the install
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string ntp.ubuntu.com
+
+# You may set this to any valid setting for $TZ; see the contents of
+# /usr/share/zoneinfo/ for valid values.
+d-i time/zone string US/Central
+
+# Controls whether or not the hardware clock is set to UTC.
+d-i clock-setup/utc boolean true
+
+#############
+#
+# Partitioning
+#
+#############
+d-i     partman-auto/disk string /dev/sdb /dev/sdc
+d-i     partman-auto/method string raid
+d-i     partman-lvm/device_remove_lvm boolean true
+d-i     partman-md/device_remove_md boolean true
+d-i     partman-lvm/confirm boolean true
+d-i     partman-auto/choose_recipe select boot-root
+d-i     partman-auto-lvm/new_vg_name string lxc
+d-i     partman-auto-lvm/guided_size string max
+d-i     partman-auto/expert_recipe string        \
+           boot-root ::                          \
+              1 1 1 free                         \
+                      $primary{ }                \
+                      $lvmignore{ }              \
+                      $bios_boot{ }              \
+                      method{ biosgrub }         \
+             .                                   \
+             1024 30 1024 raid                   \
+                $lvmignore{ }                    \
+                $primary{ } method{ raid }       \
+             .                                   \
+             1000 35 100000000 raid              \
+                $lvmignore{ }                    \
+                $primary{ } method{ raid }       \
+             .                                   \
+             8192 50 8192 swap                   \
+                $defaultignore{ }                \
+                $lvmok{ }                        \
+                lv_name{ swap00 }                \
+                method{ swap }                   \
+                format{ }                        \
+            .                                    \
+             51200 60 51200 ext4                 \
+                $defaultignore{ }                \
+                $lvmok{ }                        \
+                lv_name{ root00 }                \
+                method{ format }                 \
+                format{ }                        \
+                use_filesystem{ }                \
+                filesystem{ ext4 }               \
+                mountpoint{ / }                  \
+             .                                   \
+              1024 70 -1  ext4                   \
+                $defaultignore{ }                \
+                $lvmok{ }                        \
+                lv_name{ nova00 }                \
+                method{ format }                 \
+                format{ }                        \
+                use_filesystem{ }                \
+                filesystem{ ext4 }               \
+                mountpoint{ /var/lib/nova }      \
+              .
+# Last you need to specify how the previously defined partitions will be
+# used in the RAID setup. Remember to use the correct partition numbers
+# for logical partitions. RAID levels 0, 1, 5, 6 and 10 are supported;
+# devices are separated using "#".
+# Parameters are:
+# <raidtype> <devcount> <sparecount> <fstype> <mountpoint> \
+#          <devices> <sparedevices>
+
+d-i partman-auto-raid/recipe string \
+    1 2 0 ext2 /boot                \
+          /dev/sda2#/dev/sdb2       \
+    .                               \
+    1 2 0 lvm -                     \
+          /dev/sda3#/dev/sdb3       \
+    .
+d-i     mdadm/boot_degraded boolean false
+d-i     partman-md/confirm boolean true
+d-i     partman-partitioning/confirm_write_new_label boolean true
+d-i     partman/choose_partition select Finish partitioning and write changes to disk
+d-i     partman/confirm boolean true
+d-i     partman-md/confirm_nooverwrite  boolean true
+d-i partman/confirm_nooverwrite boolean true
+#############
+#
+# Packages
+#
+#############
+
+# Package selection
+tasksel tasksel/first multiselect openssh-server
+
+# Whether to upgrade packages after debootstrap.
+# Allowed values: none, safe-upgrade, full-upgrade
+d-i pkgsel/upgrade select none
+
+# Policy for applying updates. May be "none" (no automatic updates),
+# "unattended-upgrades" (install security updates automatically), or
+# "landscape" (manage system with Landscape).
+d-i pkgsel/update-policy select none
+
+# Some versions of the installer can report back on what software you have
+# installed, and what software you use. The default is not to report back,
+# but sending reports helps the project determine what software is most
+# popular and include it on CDs.
+popularity-contest popularity-contest/participate boolean false
+
+#############
+#
+# Users and Password
+#
+#############
+
+# Skip creation of a root account (normal user account will be able to
+# use sudo). The default is false; preseed this to true if you want to set
+# a root password.
+d-i passwd/root-login boolean true
+
+# Alternatively, to skip creation of a normal user account.
+d-i passwd/make-user boolean false
+
+# The installer will warn about weak passwords. If you are sure you know
+# what you're doing and want to override it, uncomment this.
+d-i user-setup/allow-password-weak boolean true
+
+# Root password, either in clear text
+d-i passwd/root-password password cobbler
+d-i passwd/root-password-again password cobbler
+
+#############
+#
+# Bootloader
+#
+#############
+
+# This is fairly safe to set, it makes grub install automatically to the MBR
+# if no other operating system is detected on the machine.
+d-i     grub-installer/only_debian      boolean true
+d-i grub-installer/with_other_os boolean false
+###d-i grub-installer/choose_bootdev   select /dev/sda
+#d-i grub-installer/bootdev string /dev/sdm /dev/sdn
+#############
+#
+# Post Install
+#
+#############
+
+# Command Line 1: Allow root to SSH.
+# Command Line 2: Cobbler overwrites sources.list with its own repos. Put the default Ubuntu sources.list back.
+# Command Line 3: Cobbler API call to turn off netboot.
+
+## Figure out if we're kickstarting a system or a profile
+#if $getVar('system_name','') != ''
+#set $what = "system"
+#else
+#set $what = "profile"
+#end if
+
+#d-i preseed/late_command string \
+#        sed -i '/PermitRootLogin / s/ .*/ yes/' /target/etc/ssh/sshd_config; \
+#        wget http://$http_server/xenial-sources.list -O /target/etc/apt/sources.list; \
+#        wget http://$http_server/cblr/svc/op/nopxe/system/$system_name -O /dev/null
+d-i preseed/late_command string wget -O- \
+   http://$http_server/cblr/svc/op/script/$what/$name/?script=preseed_xenial_late | \
+   chroot /target /bin/sh -s
+
+#d-i preseed/late_command string \
+#        sed -i '/PermitRootLogin / s/ .*/ yes/' /target/etc/ssh/sshd_config; \
+#        wget http://$http_server/xenial-sources.list -O /target/etc/apt/sources.list; \
+#        wget http://$http_server/cblr/svc/op/nopxe/system/$system_name -O /dev/null
+#############
+#
+# Finish
+#
+#############
+
+# Reboot after the install is finished.
+finish-install finish-install/reboot_in_progress note
+

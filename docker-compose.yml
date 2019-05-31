@@ -1,0 +1,30 @@
+version: '3.2'
+
+services:
+  cobbler:
+    container_name: cobbler
+    build: './cobbler'
+    volumes:
+      - 'cobbler_repo:/srv'
+      - 'cobbler_var:/var/lib/cobbler'
+      - '/mnt:/mnt'
+    ports:
+      - "80:80/tcp"
+      - "69:69/udp"
+    env_file:
+      - ./cobbler/config.cobbler
+    networks:
+      cobbler:
+        ipv4_address: 172.16.238.10
+volumes:
+    cobbler_repo: {}
+    cobbler_var: {}
+
+networks:
+  cobbler:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.238.0/24
+          #gateway: 172.16.238.1
