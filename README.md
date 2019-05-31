@@ -1,50 +1,48 @@
 # docker-cobbler
-## How to use
-* Install Docker
-* Download image
-* Install dhcp-helper
+Dockerfile will build an image with latest cobbler from source code, atftp server
+isc dhcpd server and apache2 all managed by supervisord.
 
 ### Configure dhcp-helper
-If you are using ```docker run```
+Cobbler container runs in unprivileged mode, to be able to deliver dhcp broadcast
+to dhcp server in container we use dhcp-helper which will relay messages to either
+network device or dhcp server ip.
 
+* If you are using `docker run`
 ```
 $ sudo vi /etc/default/dhcp-helper
 DHCPHELPER_OPTS="-b docker0 -i ens3"
 ```
 
-When usign docker-compose
+* when usign docker-compose
 ```
 $ sudo vi /etc/default/dhcp-helper
 DHCPHELPER_OPTS="-i ens3 -s 172.16.238.10"
 ```
-### Download ISO
-* http://cdimage.ubuntu.com/releases/
+* start dhcp-helper
+```
+$ sudo systemctl  start dhcp-helper.service
+```
 
-### Bionic
-http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso
-### Xenial
-http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso
+### Download Ubuntu ISO
+* http://cdimage.ubuntu.com/releases/
+* http://releases.ubuntu.com
 
 ### Download and mount loop
+Below scrip will download Bionic and Xenial iso.
 ```
-URL_BIONIC="http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso"
-FILENAME_BIONIC=$(basename $URL_BIONIC)
-test -f ~/$FILENAME_BIONIC || curl $URL_BIONIC -o ~/$FILENAME_BIONIC
-test -d /mnt/bionic || sudo mkdir /mnt/bionic
-sudo mount -o loop ~/$FILENAME_BIONIC /mnt/bionic
-
-URL_XENIAL="http://releases.ubuntu.com/16.04/ubuntu-16.04.6-server-amd64.iso"
-FILENAME_XENIAL=$(basename $URL_XENIAL)
-test -f ~/$FILENAME_XENIAL || curl $URL_XENIAL -o ~/$FILENAME_XENIAL
-test -d /mnt/xenial ||sudo mkdir /mnt/xenial
-sudo mount -o loop ~/$FILENAME_XENIAL /mnt/xenial
+$ ./download-iso-and-mount.sh
 ```
 
-#### Run Cobbler image
+### Docker run cobbler image
 ```
-docker run -dt  -v /mnt/:/mnt -p 80:80/tcp -p 69:69/udp  --name cobbler imagename
+$ docker run -dt  -v /mnt/:/mnt -p 80:80/tcp -p 69:69/udp  --name cobbler urosorozel/cobbler:latest
 ```
 
+### Docker-compose
+
+```
+$ docker-compose up --build -d
+```
 
 ### Import Xenial and Bionic
 Run script against container
@@ -52,30 +50,3 @@ Run script against container
 docker exec -it cobbler /bin/bash -c "$(<import_iso.sh)"
 ```
 
-```
-PROFILE_NAME="ubuntu-18.04.2-server"
-
-cobbler import --name="$PROFILE_NAME"  --path /mnt/bionic --arch=x86_64 --kickstart=/var/lib/cobbler/kickstarts/ubuntu-server-bionic-unattended-cobbler-rpc.seed --breed ubuntu
-if [[ $? -eq 0 ]]; then
-    for PROFILE in $(cobbler profile list | grep ${PROFILE_NAME});do
-        echo "Updating profile $PROFILE"
-        cobbler profile  edit \
-          --name ${PROFILE}  \
-          --kopts="ksdevice=bootif lang console=ttyS0,115200n8 locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0" \
-          --kopts-post="console=tty0 console=ttyS0,115200n8"
-    done
-fi
-
-PROFILE_NAME="ubuntu-16.04.6-server"
-
-cobbler import --name="$PROFILE_NAME"  --path /mnt/xenial --arch=x86_64 --kickstart=/var/lib/cobbler/kickstarts/ubuntu-server-xenial-unattended-cobbler-rpc.seed --breed ubuntu
-if [[ $? -eq 0 ]]; then
-    for PROFILE in $(cobbler profile list | grep ${PROFILE_NAME});do
-        echo "Updating profile $PROFILE"
-        cobbler profile  edit \
-          --name ${PROFILE}  \
-          --kopts="ksdevice=bootif lang console=ttyS0,115200n8 locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0" \
-          --kopts-post="console=tty0 console=ttyS0,115200n8"
-    done
-fi
-```
