@@ -1,0 +1,47 @@
+- hosts: localhost
+  serial: 5
+  vars:
+      cobbler_server: 172.16.238.10
+      cobbler_username: cobbler
+      cobbler_password: cobbler
+
+  tasks:
+    - include_vars: cobbler_systems.yml
+
+    - name: Ensure the system exists in Cobbler
+      cobbler_system:
+        host: "{{ cobbler_server }}"
+        use_ssl: no
+        username: "{{ cobbler_username }}"
+        password: "{{ cobbler_password }}"
+        name: "{{ item.name }}"
+        properties: "{{ item.properties }}"
+        interfaces: "{{ item.interfaces }}"
+        state: present
+      with_items: "{{ baremetal }}"
+
+
+    - name: Commit Cobbler changes
+      cobbler_sync:
+        host: "{{ cobbler_server }}"
+        use_ssl: no
+        username: "{{ cobbler_username }}"
+        password: "{{ cobbler_password }}"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Set bootdev to network via ipmi
+      ipmi_boot:
+        name: "{{ item.ipmi.address }}"
+        user: "{{ item.ipmi.password }}"
+        password: "{{ item.ipmi.password }}"
+        bootdev: network
+      with_items: "{{ baremetal }}"
+
+    - name: Power on servers via ipmi
+      ipmi_power:
+        name: "{{ item.ipmi.address }}"
+        user: "{{ item.ipmi.password }}"
+        password: "{{ item.ipmi.password }}"
+        state: on
+      with_items: "{{ baremetal }}"
