@@ -47,6 +47,6 @@ $ docker-compose up --build -d
 ### Import Xenial and Bionic
 Run script against container
 ```
-docker exec -it cobbler /bin/bash -c "$(<import_iso.sh)"
+docker exec -it cobbler /bin/bash -c "$(<import-iso.sh)"
 ```
 

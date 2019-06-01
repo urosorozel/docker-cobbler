@@ -6,7 +6,7 @@
       cobbler_password: cobbler
 
   tasks:
-    - include_vars: cobbler_systems.yml
+    - include_vars: baremetal-nodes.yml
 
     - name: Ensure the system exists in Cobbler
       cobbler_system:
@@ -45,3 +45,4 @@
         password: "{{ item.ipmi.password }}"
         state: on
       with_items: "{{ baremetal }}"
+

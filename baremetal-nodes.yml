@@ -1,0 +1,73 @@
+cobbler_options:
+  # kopts: "ksdevice=bootif lang console=ttyS0,115200n8 locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0"
+  # kopts_post: "console=tty0 console=ttyS0,115200n8"
+  kopts: "ksdevice=bootif lang locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0"
+  kopts_post: ""
+  ipxe: 0
+  domain_servers: [ 8.8.8.8, 1.1.1.1 ]
+  domain_search: foo.com, bar.net 
+baremetal:
+  - name: servername1
+    properties:
+      profile: ubuntu-18.04.2-server-x86_64
+      name_servers: "{{ cobbler_options.domain_servers }}" 
+      name_servers_search: "{{ cobbler_options.domain_search }}"
+      enable_gpxe: "{{ cobbler_options.ipxe }}"
+      kernel_options: "{{ cobbler_options.kopts }}"
+      kernel_options_post: "{{ cobbler_options.kopts_post }}"
+    interfaces:
+      eth0:
+        macaddress: 0c:c4:7a:bb:ff:f1 
+        ipaddress: 192.168.122.66
+    ipmi:
+      address: 192.168.10.201
+      username: ADMIN
+      password: ADMIN
+  - name: servername2
+    properties:
+      profile: ubuntu-18.04.2-server-x86_64
+      name_servers: "{{ cobbler_options.domain_servers }}"
+      name_servers_search: "{{ cobbler_options.domain_search }}"
+      enable_gpxe: "{{ cobbler_options.ipxe }}"
+      kernel_options: "{{ cobbler_options.kopts }}"
+      kernel_options_post: "{{ cobbler_options.kopts_post }}"
+    interfaces:
+      eth0:
+        macaddress: 0c:c4:7a:bb:ff:f2
+        ipaddress: 192.168.122.67
+    ipmi:
+      address: 192.168.10.202
+      username: ADMIN
+      password: ADMIN
+  - name: servername3
+    properties:
+      profile: ubuntu-18.04.2-server-x86_64
+      name_servers: "{{ cobbler_options.domain_servers }}"
+      name_servers_search: "{{ cobbler_options.domain_search }}"
+      enable_gpxe: "{{ cobbler_options.ipxe }}"
+      kernel_options: "{{ cobbler_options.kopts }}"
+      kernel_options_post: "{{ cobbler_options.kopts_post }}"
+    interfaces:
+      eth0:
+        macaddress: 0c:c4:7a:bb:ff:f3
+        ipaddress: 192.168.122.68
+    ipmi:
+      address: 192.168.10.203
+      username: ADMIN
+      password: ADMIN
+  - name: servername4
+    properties:
+      profile: ubuntu-18.04.2-server-x86_64
+      name_servers: "{{ cobbler_options.domain_servers }}"
+      name_servers_search: "{{ cobbler_options.domain_search }}"
+      enable_gpxe: "{{ cobbler_options.ipxe }}"
+      kernel_options: "{{ cobbler_options.kopts }}"
+      kernel_options_post: "{{ cobbler_options.kopts_post }}" 
+    interfaces:
+      eth0:
+        macaddress: 0c:c4:7a:bb:ff:f4
+        ipaddress: 192.168.122.69
+    ipmi:
+      address: 192.168.10.204
+      username: ADMIN
+      password: ADMIN
