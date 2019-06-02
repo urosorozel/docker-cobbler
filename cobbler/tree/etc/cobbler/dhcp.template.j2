@@ -79,7 +79,20 @@ group {
             filename "undionly.kpxe";
         }
         #else
-        filename "$iface.filename";
+        class "pxeclients" {
+          match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+          if option pxe-system-type = 00:02 {
+                  filename "ia64/elilo.efi";
+          } else if option pxe-system-type = 00:06 {
+                  filename "grub/grub-x86.efi";
+          } else if option pxe-system-type = 00:07 {
+                  filename "grub/grub-x86_64.efi";
+          } else if option pxe-system-type = 00:09 {
+                  filename "grub/grub-x86_64.efi";
+          } else {
+                  filename "pxelinux.0";
+          }
+        }
         #end if
         ## Cobbler defaults to $next_server, but some users
         ## may like to use $iface.system.server for proxied setups

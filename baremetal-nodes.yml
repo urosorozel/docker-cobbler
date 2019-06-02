@@ -1,7 +1,7 @@
 cobbler_options:
-  # kopts: "ksdevice=bootif lang console=ttyS0,115200n8 locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0"
+  # kopts: "ksdevice=bootif lang console=ttyS0,115200n8 locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto console=tty0"
   # kopts_post: "console=tty0 console=ttyS0,115200n8"
-  kopts: "ksdevice=bootif lang locale=en_US text priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto  tty0"
+  kopts: "ksdevice=bootif lang locale=en_US text priority=critical priority=critical netcfg/dhcp_timeout=60 netcfg/choose_interface=auto console=tty0"
   kopts_post: ""
   ipxe: 0
   domain_servers: [ 8.8.8.8, 1.1.1.1 ]
