@@ -1,5 +1,5 @@
 #!/bin/bash
-URL_BIONIC="http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.2-server-amd64.iso"
+URL_BIONIC="http://cdimage.ubuntu.com/releases/18.04/release/ubuntu-18.04.3-server-amd64.iso"
 FILENAME_BIONIC=$(basename $URL_BIONIC)
 echo "Downloading $FILENAME_BIONIC"
 test -f ~/$FILENAME_BIONIC || curl $URL_BIONIC -o ~/$FILENAME_BIONIC

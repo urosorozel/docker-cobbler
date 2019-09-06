@@ -37,6 +37,7 @@
         password: "{{ item.ipmi.password }}"
         bootdev: network
       with_items: "{{ baremetal }}"
+      when: ipmi is defined
 
     - name: Power on servers via ipmi
       ipmi_power:
@@ -45,4 +46,4 @@
         password: "{{ item.ipmi.password }}"
         state: on
       with_items: "{{ baremetal }}"
-
+      when: ipmi is defined
