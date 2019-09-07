@@ -62,13 +62,24 @@ $ sudo modprobe ip_conntrack_tftp ip_nat_tftp
 ### Install packages
 
 ```
-$ sudo apt install docker.io dhcp-helper libvirt-bin virt-install qemu-kvm
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add
+$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+$ sudo apt-get update
+$ sudo apt-get install docker-ce python-pip
 ```
 
 ### Update group membership for Docker and Libvirt
 
+For Xenial
+
 ```
-$ sudo usermod -aG docker,libvirtd,
+$ sudo usermod -aG docker,libvirtd ubuntu
+```
+
+or Bionic
+
+```
+$ sudo usermod -aG docker,libvirt ubuntu
 ```
 logout and login to take an affect
 
@@ -76,22 +87,23 @@ logout and login to take an affect
 $  sudo su - $USER
 ```
 
-### Update libvirt network
+### Add libvirt network
 
 * update subnet details if required
 ```
-$ sudo virsh net-edit default
+$ echo "<network><name>cobbler</name><forwardmode='nat'/><bridgename='cobbler'stp='on'delay='0'/><ipaddress='192.168.10.1'netmask='255.255.255.0'></ip></network>" | virsh net-define /dev/stdin 
 ```
 
-* start default libvirt network
+* start cobbler libvirt network
 ```
-$ sudo virsh start default
+$ sudo virsh start cobbler
 ```
 ### Update DHCP helper (DHCP relay)
 
+* When testing in VM we want to relay all DHCP requests from cobbler bridge to container subnet
 ```
 $ sudo vi /etc/default/dhcp-helper
-DHCPHELPER_OPTS="-i ens3 -s 172.16.238.10"
+DHCPHELPER_OPTS="-i cobbler -s 172.16.238.10"
 ```
 * start dhcp-helper
 ```
@@ -125,11 +137,11 @@ COBBLER_NEXT_SERVER_HOST_IP=192.168.122.91
 COBBLER_PUBLIC_SSH_KEY=
 
 # Dhcp settings
-COBBLER_SUBNET=192.168.122.0
+COBBLER_SUBNET=192.168.10.0
 COBBLER_NETMASK=255.255.255.0
-COBBLER_ROUTERS=192.168.122.1
+COBBLER_ROUTERS=192.168.10.1
 COBBLER_NAMESERVERS=8.8.8.8,1.1.1.1
-COBBLER_DHCP_RANGE=192.168.122.50 192.168.122.100
+COBBLER_DHCP_RANGE=192.168.10.50 192.168.10.100
 
 # Proxy
 COBBLER_PROXY_URL_EXT=
@@ -164,7 +176,7 @@ $ virt-install --connect qemu:///system \
                --memory 2048 \
                --disk size=10 \
                --pxe \
-               --network=default \
+               --network network=cobbler,mac=0c:c4:7a:bb:ff:f1 \
                --virt-type qemu \
                --console pty,target_type=serial \
                --graphics vnc,listen=0.0.0.0
