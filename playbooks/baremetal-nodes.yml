@@ -5,7 +5,7 @@ cobbler_options:
   kopts_post: ""
   ipxe: 0
   domain_servers: [ 8.8.8.8, 1.1.1.1 ]
-  domain_search: foo.com, bar.net 
+  domain_search: "foo.com bar.net"
 baremetal:
   - name: servername1
     properties:
