@@ -57,6 +57,7 @@ docker exec -it cobbler /bin/bash -c "$(<import-iso.sh)"
 
 ```
 $ sudo modprobe ip_conntrack_tftp ip_nat_tftp
+$ sudo iptables -t raw -A PREROUTING -p udp --dport 69 -j CT --helper tftp
 ```
 
 ### Install packages
@@ -65,7 +66,7 @@ $ sudo modprobe ip_conntrack_tftp ip_nat_tftp
 $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add
 $ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 $ sudo apt-get update
-$ sudo apt-get install docker-ce python-pip
+$ sudo apt-get install docker-ce qemu-kvm virtinst libvirt-bin python3-pip
 ```
 
 ### Update group membership for Docker and Libvirt
@@ -91,7 +92,13 @@ $  sudo su - $USER
 
 * update subnet details if required
 ```
-$ echo "<network><name>cobbler</name><forwardmode='nat'/><bridgename='cobbler'stp='on'delay='0'/><ipaddress='192.168.10.1'netmask='255.255.255.0'></ip></network>" | virsh net-define /dev/stdin 
+$ echo "<network>
+        <name>cobbler</name>
+        <dns enable="no"/>
+        <forward mode='nat'/>
+        <bridge name='cobbler' stp='on' delay='0'/>
+        <ip address='192.168.10.1' netmask='255.255.255.0'></ip>
+        </network>" | virsh net-define /dev/stdin
 ```
 
 * start cobbler libvirt network
@@ -179,5 +186,6 @@ $ virt-install --connect qemu:///system \
                --network network=cobbler,mac=0c:c4:7a:bb:ff:f1 \
                --virt-type qemu \
                --console pty,target_type=serial \
-               --graphics vnc,listen=0.0.0.0
+               --graphics vnc,listen=0.0.0.0 \
+               --os-variant ubuntu18.04
 ```
