@@ -23,7 +23,10 @@ RUN apt-get update && \
              supervisor \
              vim \
              rsyslog \
+             grub-efi-amd64-signed \
              rsync && \
+      ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
+      ln -sf /proc/self/fd/1 /var/log/apache2/error.log && \
       pip3 install j2cli
       #curl https://bootstrap.pypa.io/get-pip.py | python && \
       #pip3 install django==1.9.13 ipaddress j2cli future distro coverage netaddr yaml simplejson cheetah urlgrabber
@@ -34,16 +37,11 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
     make && \
     make install && \
     ln -s /srv/tftpboot /var/lib/tftpboot && \
-    chown www-data /var/lib/cobbler/webui_sessions && \
-    ln -s /usr/local/lib/python2.7/dist-packages/cobbler \
-          /usr/lib/python2.7/dist-packages/cobbler && \
+    #chown www-data /var/lib/cobbler/webui_sessions && \
     echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/share/cobbler/web/settings.py && \
     sed -i "s|^INTERFACESv4=.*|INTERFACESv4='eth0'|g" /etc/default/isc-dhcp-server && \
-    sed -i "s|^.*Order allow,deny.*||g" /etc/apache2/conf-available/cobbler.conf && \
-    sed -i "s|^.*Allow from all.*|    Require all granted|g" /etc/apache2/conf-available/cobbler.conf && \
     echo "lanplus=1" >> /etc/cobbler/power/fence_ipmilan.template && \
     touch /var/lib/dhcp/dhcpd.leases && \
-    cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe && \
     a2enmod proxy proxy_http rewrite && \
     a2enconf cobbler cobbler_web
 
@@ -56,7 +54,9 @@ RUN service apache2 start && \
     /usr/local/bin/cobblerd  && \
     cobbler signature update && \
     cobbler get-loaders && \
-    cobbler sync
+    cobbler sync && \
+    cp /usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /srv/tftpboot/grubx64.efi && \
+    cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe
 
 ENV COBBLER_SERVER_HOST=127.0.0.1 \
     COBBLER_NEXT_SERVER_HOST=192.168.10.91 \

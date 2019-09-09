@@ -57,6 +57,7 @@ docker exec -it cobbler /bin/bash -c "$(<import-iso.sh)"
 
 ```
 $ sudo modprobe ip_conntrack_tftp ip_nat_tftp
+$ sudo iptables -t raw -A PREROUTING -p udp --dport 69 -j CT --helper tftp
 ```
 
 ### Install packages
@@ -179,5 +180,6 @@ $ virt-install --connect qemu:///system \
                --network network=cobbler,mac=0c:c4:7a:bb:ff:f1 \
                --virt-type qemu \
                --console pty,target_type=serial \
-               --graphics vnc,listen=0.0.0.0
+               --graphics vnc,listen=0.0.0.0 \
+               --os-variant ubuntu18.04
 ```
