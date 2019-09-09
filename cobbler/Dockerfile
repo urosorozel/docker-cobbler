@@ -28,8 +28,6 @@ RUN apt-get update && \
       ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
       ln -sf /proc/self/fd/1 /var/log/apache2/error.log && \
       pip3 install j2cli
-      #curl https://bootstrap.pypa.io/get-pip.py | python && \
-      #pip3 install django==1.9.13 ipaddress j2cli future distro coverage netaddr yaml simplejson cheetah urlgrabber
 
 
 RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
@@ -37,7 +35,6 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
     make && \
     make install && \
     ln -s /srv/tftpboot /var/lib/tftpboot && \
-    #chown www-data /var/lib/cobbler/webui_sessions && \
     echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/share/cobbler/web/settings.py && \
     sed -i "s|^INTERFACESv4=.*|INTERFACESv4='eth0'|g" /etc/default/isc-dhcp-server && \
     echo "lanplus=1" >> /etc/cobbler/power/fence_ipmilan.template && \
@@ -48,7 +45,6 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
 COPY tree/ /
 
 RUN service apache2 start && \
-    #service cobblerd start && \
     mkdir /srv/tftpboot && \
     touch /etc/genders && \
     /usr/local/bin/cobblerd  && \
