@@ -1,1 +1,1 @@
-$SNIPPET('preseed_xenial_post_deploy')
+$SNIPPET('preseed_bionic_post_deploy')
