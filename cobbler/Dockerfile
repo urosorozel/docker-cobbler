@@ -52,7 +52,9 @@ RUN service apache2 start && \
     cobbler get-loaders && \
     cobbler sync && \
     cp /usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /srv/tftpboot/grubx64.efi && \
-    cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe
+    cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe && \
+    mv /var/lib/cobbler/snippets /var/lib/cobbler/autoinstall_snippets && \
+    mv /var/lib/cobbler/scripts  /var/lib/cobbler/autoinstall_scripts
 
 ENV COBBLER_SERVER_HOST=127.0.0.1 \
     COBBLER_NEXT_SERVER_HOST=192.168.10.91 \
