@@ -51,6 +51,7 @@ RUN service apache2 start && \
     cobbler signature update && \
     cobbler get-loaders && \
     cobbler sync && \
+    ln -s /usr/local/share/cobbler /usr/share/ && \
     cp /usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /srv/tftpboot/grubx64.efi && \
     cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe && \
     mv /var/lib/cobbler/snippets /var/lib/cobbler/autoinstall_snippets && \
