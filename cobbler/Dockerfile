@@ -1,41 +1,87 @@
 FROM ubuntu:bionic
 
 ARG COBBLER_GIT_URL="https://github.com/cobbler/cobbler.git"
-ARG COBBLER_GIT_TAG="v3.0.0"
-ARG COBBLER_SECRET_KEY="!jd!o9tq7k+@-f-4+r#uqa9b9y(yo%2^ch2iq!pdgmo^$i360j"
+ARG COBBLER_GIT_TAG="v3.1.2"
 
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
-    apt-get install -y  fence-agents ipxe ipmitool \
-             python3-pip \
-             apache2 \
-             apache2-dev \
-             libsasl2-dev \
-             libapache2-mod-wsgi-py3 \
-             make \
-             isc-dhcp-server \
-             atftpd \
-             git \
-             lsb-release \
-             net-tools \
-             curl \
-             supervisor \
-             vim \
-             rsyslog \
-             grub-efi-amd64-signed \
-             rsync && \
-      ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
-      ln -sf /proc/self/fd/1 /var/log/apache2/error.log && \
-      pip3 install j2cli
+    apt-get install -qqy gnupg curl && \
+    /bin/sh -c "echo 'deb http://download.opensuse.org/repositories/Debian:/debbuild/Debian_10/ /' > /etc/apt/sources.list.d/debbuild.list" && \
+    curl -sL http://download.opensuse.org/repositories/Debian:/debbuild/Debian_10/Release.key | apt-key add - && \
+    apt-get update -qq && \
+    apt-get install -qqy \
+    debbuild \
+    debbuild-macros \
+    wget \
+    pycodestyle \
+    pyflakes3 \
+    python-django-common \
+    python3-coverage \
+    python3-distro \
+    python3-distutils \
+    python3-django \
+    python3-dnspython \
+    python3-dns  \
+    python3-dnsq  \
+    python3-future \
+    python3-ldap3 \
+    python3-netaddr \
+    python3-pip \
+    python3-pycodestyle \
+    python3-pytest \
+    python3-setuptools \
+    python3-simplejson  \
+    python3-sphinx \
+    python3-tornado \
+    python3-tz \
+    python3-yaml \
+    python3-pip \
+    liblocale-gettext-perl \
+    lsb-release \
+    xz-utils \
+    bzip2 \
+    dpkg-dev \
+    tftpd-hpa \
+    #createrepo \
+    rsync \
+    xorriso\
+    fakeroot \
+    patch \
+    pax \
+    git \
+    hardlink \
+    apache2 \
+    libapache2-mod-wsgi-py3 \
+    apache2-dev \
+    libsasl2-dev \
+    make \
+    isc-dhcp-server \
+    net-tools \
+    supervisor \
+    vim \
+    rsyslog \
+    grub-efi-amd64-signed \
+  	fence-agents \
+  	ipxe \
+  	ipmitool \
+	  lsof \
+	  wget \
+    systemd  && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
+    ln -sf /proc/self/fd/1 /var/log/apache2/error.log
 
-
-RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
-    pip3 install -r requirements.txt &&\
+RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL --depth 1 && cd cobbler && \
+    # Ubuntu 18.04's apt package python3-cheetah fails to install:
+    pip3 install cheetah3 j2cli && \
+    mkdir -p /etc/cobbler/power/ && \
     make && \
     make install && \
-    ln -s /srv/tftpboot /var/lib/tftpboot && \
-    echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/lib/python3.6/dist-packages/cobbler/web/settings.py && \
+    ln -s /srv/tftp /var/lib/tftpboot && \
+    ln -s /usr/local/share/cobbler /usr/share/ && \
+    export COBBLER_SECRET_KEY=$(head /dev/urandom | tr -dc 'A-Za-z0-9!"#$%()*+,-./:;<=>?@[\]^_`{|}~' | head -c 57 ; echo '') && \
+    echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/share/cobbler/web/settings.py && \
     sed -i "s|^INTERFACESv4=.*|INTERFACESv4='eth0'|g" /etc/default/isc-dhcp-server && \
     echo "lanplus=1" >> /etc/cobbler/power/fence_ipmilan.template && \
     touch /var/lib/dhcp/dhcpd.leases && \
@@ -45,17 +91,13 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
 COPY tree/ /
 
 RUN service apache2 start && \
-    mkdir /srv/tftpboot && \
+    mkdir -p /srv/tftpboot && \
     touch /etc/genders && \
     /usr/local/bin/cobblerd  && \
     cobbler signature update && \
     cobbler get-loaders && \
-    cobbler sync && \
-    ln -s /usr/local/share/cobbler /usr/share/ && \
-    cp /usr/lib/grub/x86_64-efi-signed/grubnetx64.efi.signed /srv/tftpboot/grubx64.efi && \
-    cp /usr/lib/ipxe/undionly.kpxe /srv/tftpboot/undionly.kpxe && \
-    mv /var/lib/cobbler/snippets /var/lib/cobbler/autoinstall_snippets && \
-    mv /var/lib/cobbler/scripts  /var/lib/cobbler/autoinstall_scripts
+    chown -R 33:0 /var/lib/cobbler/webui_sessions && \
+    ln -s /var/www/cobbler_webui_content /var/www/html/
 
 ENV COBBLER_SERVER_HOST=127.0.0.1 \
     COBBLER_NEXT_SERVER_HOST=192.168.10.91 \

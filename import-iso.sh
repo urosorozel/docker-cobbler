@@ -3,28 +3,15 @@ if [ ! -f "/usr/local/bin/cobbler" ]; then
   echo "\$ docker exec -it cobbler /bin/bash -c \"\$(<import-iso.sh)\""
   exit 1
 fi
-PROFILE_NAME="ubuntu-18.04.2-server"
-echo "Importing ${PROFILE_NAME}"
-cobbler import --name="$PROFILE_NAME"  --path /mnt/bionic --arch=x86_64 --breed ubuntu --autoinstall ubuntu-server-bionic-unattended-cobbler-rpc.seed
+DISTRO_NAME="ubuntu-18.04.4-server"
+TEMPLATE="ubuntu-server-bionic-unattended-cobbler-rpc.seed"
+echo "Importing ${DISTRO_NAME}"
+cobbler import --name="$DISTRO_NAME"  --path /data/iso/${DISTRO_NAME} --arch=x86_64 --breed ubuntu --autoinstall ${TEMPLATE}
 if [[ $? -eq 0 ]]; then
-    for PROFILE in $(cobbler profile list | grep ${PROFILE_NAME});do
-        echo "Updating profile $PROFILE"
-        cobbler profile edit \
-          --name ${PROFILE}  \
+    for distro in $(cobbler distro list | grep ${DISTRO_NAME});do
+        echo "Updating distro $distro"
+        cobbler distro edit \
+          --name ${distro}  \
           --kernel-options="ksdevice=bootif lang priority=critical locale=en_US text netcfg/dhcp_timeout=60 netcfg/choose_interface=auto console=tty0"
     done
 fi
-
-PROFILE_NAME="ubuntu-16.04.6-server"
-echo "Importing ${PROFILE_NAME}"
-cobbler import --name="$PROFILE_NAME"  --path /mnt/xenial --arch=x86_64 --breed ubuntu --autoinstall ubuntu-server-xenial-unattended-cobbler-rpc.seed
-if [[ $? -eq 0 ]]; then
-    for PROFILE in $(cobbler profile list | grep ${PROFILE_NAME});do
-        echo "Updating profile $PROFILE"
-        cobbler profile  edit \
-          --name ${PROFILE}  \
-          --kernel-options="ksdevice=bootif lang priority=critical locale=en_US text netcfg/dhcp_timeout=60 netcfg/choose_interface=auto console=tty0"
-    done
-fi
-echo "Running cobbler sync"
-cobbler sync
