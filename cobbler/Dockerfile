@@ -35,7 +35,7 @@ RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL && cd cobbler && \
     make && \
     make install && \
     ln -s /srv/tftpboot /var/lib/tftpboot && \
-    echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/share/cobbler/web/settings.py && \
+    echo "SECRET_KEY='$COBBLER_SECRET_KEY'" >> /usr/local/lib/python3.6/dist-packages/cobbler/web/settings.py && \
     sed -i "s|^INTERFACESv4=.*|INTERFACESv4='eth0'|g" /etc/default/isc-dhcp-server && \
     echo "lanplus=1" >> /etc/cobbler/power/fence_ipmilan.template && \
     touch /var/lib/dhcp/dhcpd.leases && \
