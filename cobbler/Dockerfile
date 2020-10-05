@@ -72,9 +72,12 @@ RUN apt-get update && \
     ln -sf /proc/self/fd/1 /var/log/apache2/access.log && \
     ln -sf /proc/self/fd/1 /var/log/apache2/error.log
 
-RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL --depth 1 && cd cobbler && \
+# commenting cloning a version until a post v3.1.2 release that includes PR #2387
+#RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL --depth 1 && cd cobbler && \
+RUN git clone -n $COBBLER_GIT_URL --depth 1 && cd cobbler && \
+    git checkout 6281d25cbe1d96b5e5b01d7a8c46f670643e9384 && \
     # Ubuntu 18.04's apt package python3-cheetah fails to install:
-    pip3 install cheetah3 j2cli && \
+    pip3 install cheetah3 j2cli django-urls && \
     mkdir -p /etc/cobbler/power/ && \
     make && \
     make install && \
