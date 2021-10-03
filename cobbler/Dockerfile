@@ -1,7 +1,9 @@
 FROM ubuntu:bionic
 
 ARG COBBLER_GIT_URL="https://github.com/cobbler/cobbler.git"
-ARG COBBLER_GIT_TAG="v3.1.2"
+ARG COBBLER_GIT_TAG="v3.2.0"
+ARG GIT_COMMIT=unspecified
+LABEL git_commit=$GIT_COMMIT
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -74,7 +76,7 @@ RUN apt-get update && \
 
 # commenting cloning a version until a post v3.1.2 release that includes PR #2387
 #RUN git clone --branch $COBBLER_GIT_TAG $COBBLER_GIT_URL --depth 1 && cd cobbler && \
-RUN git clone -n $COBBLER_GIT_URL --depth 1 && cd cobbler && \
+RUN git clone --depth 1 -n $COBBLER_GIT_URL && cd cobbler && \
     git checkout 6281d25cbe1d96b5e5b01d7a8c46f670643e9384 && \
     # Ubuntu 18.04's apt package python3-cheetah fails to install:
     pip3 install cheetah3 j2cli django-urls && \
@@ -110,6 +112,13 @@ ENV COBBLER_SERVER_HOST=127.0.0.1 \
     COBBLER_ROUTERS=192.168.10.1 \
     COBBLER_NAMESERVERS=1.1.1.1,8.8.8.8 \
     COBBLER_DHCP_RANGE="192.168.10.50 192.168.10.100" \
+    COBBLER_DHCP_INTERFACE= \
+    COBBLER_DHCP_INTERFACE2= \
+    COBBLER_SUBNET2= \
+    COBBLER_NETMASK2= \
+    COBBLER_ROUTERS2= \
+    COBBLER_NAMESERVERS2= \
+    COBBLER_DHCP_RANGE2= \
     COBBLER_PROXY_URL_EXT= \
     COBBLER_PROXY_URL_INT=
 

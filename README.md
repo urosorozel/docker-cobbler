@@ -1,6 +1,13 @@
 # docker-cobbler
 Dockerfile will build an image with latest cobbler from source code, atftp server
 isc dhcpd server and apache2 all managed by supervisord.
+```shell
+docker build ./cobbler -t shadwell/docker-cobbler-supervisord:#.#.# --build-arg GIT_COMMIT=$(git log -1 --format=%h)
+```
+commit used to build the docker image can be retrieved using:
+```shell
+docker inspect <docker_image_id> | jq '.[].ContainerConfig.Labels'
+```
 
 ### Configure dhcp-helper
 Cobbler container runs in unprivileged mode, to be able to deliver dhcp broadcast
